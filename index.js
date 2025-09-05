@@ -2,6 +2,10 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const express = require('express');
 const bodyParser = require('body-parser');
 const QRCode = require('qrcode');
+const fs = require('fs');   // <-- import fs qui
+
+// 🔄 forza reset sessione all'avvio (così genera sempre un QR nuovo finché non colleghi il telefono)
+fs.rmSync('.wwebjs_auth', { recursive: true, force: true });
 
 const app = express();
 app.use(bodyParser.json());
@@ -15,7 +19,7 @@ const client = new Client({
 // Genera QR code
 client.on('qr', async (qr) => {
   latestQR = await QRCode.toDataURL(qr);
-  console.log('📱 Scansiona il QR su /qr');
+  console.log('📱 Vai su /qr per scansionare il codice');
 });
 
 client.on('ready', () => {
@@ -43,9 +47,9 @@ app.post('/send-message', (req, res) => {
 // Endpoint per vedere il QR
 app.get('/qr', (req, res) => {
   if (latestQR) {
-    res.send(`<img src="${latestQR}"/>`);
+    res.send(`<img src="${latestQR}" />`);
   } else {
-    res.send('Nessun QR disponibile');
+    res.send('Nessun QR disponibile. Aspetta qualche secondo e ricarica...');
   }
 });
 
